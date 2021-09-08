@@ -18,7 +18,7 @@ namespace DataAccessLibrary.BusinessLogic
         /// <returns>True, wenn die Transaktion erfolgreich war</returns>
         public static List<int> CreateTask(string taskname, string taskDescription, bool isActive)
         {
-            string sql = @"insert into dbo.Task (TaskName, TaskDescription, TimeStamp, IsActive)
+            string sql = @"insert into dbo.Tasks (TaskName, TaskDescription, TimeStamp, IsActive)
                             output inserted.Id
                             values (@TaskName, @TaskDescription, GETDATE(), @IsActive);";
 
@@ -39,7 +39,7 @@ namespace DataAccessLibrary.BusinessLogic
         /// <returns>True, wenn die Transaktion erfolgreich war</returns>
         public static bool UpdateTask(int taskId, string taskname, string taskDescription, bool isActive)
         {
-            string sql = @"update dbo.Task set TaskName = @TaskName, TaskDescription = @TaskDescription, IsActive = @IsActive
+            string sql = @"update dbo.Tasks set TaskName = @TaskName, TaskDescription = @TaskDescription, IsActive = @IsActive
                             where Id = @Id;";
 
             return SqlDataAccess.ChangeData(sql, new TaskModel
@@ -58,8 +58,8 @@ namespace DataAccessLibrary.BusinessLogic
         /// <returns>True, wenn die Transaktion erfolgreich war</returns>
         public static bool DeleteTask(int taskId)
         {
-            string sql = @"delete from dbo.Task where Id = @TaskID;
-                            delete from dbo.TaskHistory where TaskID = @TaskID;";
+            string sql = @"delete from dbo.Tasks where Id = @TaskID;
+                            delete from dbo.TasksHistory where TaskID = @TaskID;";
 
             return SqlDataAccess.ChangeData(sql, new { TaskID = taskId });
         }
@@ -79,12 +79,12 @@ namespace DataAccessLibrary.BusinessLogic
                 // Aufgabe wurde gestartet
                 if (isActive)
                 {
-                    sql = @"insert into dbo.TaskHistory (TaskID, StartDate) values (@TaskID, GETDATE());";
+                    sql = @"insert into dbo.TasksHistory (TaskID, StartDate) values (@TaskID, GETDATE());";
                 }
                 // Aufgabe wurde pausiert
                 else
                 {
-                    sql = @"update dbo.TaskHistory set EndDate = GETDATE(), Duration = DATEDIFF(second, StartDate, GETDATE())
+                    sql = @"update dbo.TasksHistory set EndDate = GETDATE(), Duration = DATEDIFF(second, StartDate, GETDATE())
                         where TaskID = @TaskID and EndDate is null;";
                 }
 
@@ -100,7 +100,7 @@ namespace DataAccessLibrary.BusinessLogic
         public static List<TaskModel> LoadTasks()
         {
             string sql = @"select T.Id, TaskName, TaskDescription, TimeStamp, IsActive, Duration = sum(ISNULL(TH.Duration, DATEDIFF(second, StartDate, GETDATE())))
-                            from dbo.Task as T left join dbo.TaskHistory as TH on T.Id = TH.TaskID
+                            from dbo.Tasks as T left join dbo.TasksHistory as TH on T.Id = TH.TaskID
                             group by T.Id, TaskName, TaskDescription, TimeStamp, IsActive
                             order by T.Id;";
 
@@ -114,7 +114,7 @@ namespace DataAccessLibrary.BusinessLogic
         public static List<TaskHistoryModel> LoadTaskHistory(int taskId)
         {
             string sql = @"select TaskID = row_number() over(order by TaskID), StartDate, EndDate = ISNULL(EndDate, GETDATE()), Duration = ISNULL(Duration, DATEDIFF(second, StartDate, GETDATE()))
-                            from dbo.TaskHistory where TaskID = @TaskID order by Id desc;";
+                            from dbo.TasksHistory where TaskID = @TaskID order by Id desc;";
 
             return SqlDataAccess.LoadData<TaskHistoryModel>(sql, new { TaskID = taskId });
         }

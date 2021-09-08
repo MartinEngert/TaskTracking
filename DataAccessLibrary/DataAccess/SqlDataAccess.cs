@@ -19,7 +19,7 @@ namespace DataAccessLibrary.DataAccess
         /// </summary>
         /// <param name="connectionName">Name der Datenbank</param>
         /// <returns>Verbindungszeichenfolge</returns>
-        public static string GetConnectionString(string connectionName = "ConnectionString_TaskDB")
+        public static string GetConnectionString(string connectionName = "ConnectionString_TasksDB")
         {
             return ConfigurationManager.ConnectionStrings[connectionName].ConnectionString;
         }
